@@ -9,13 +9,15 @@ enum AllowlistTypes {
 enum ReceiverConstraints {
     None,
     NoCode,
-    EOA
+    EOA,
+    Disabled
 }
 
 enum CallerConstraints {
     None,
     OperatorWhitelistEnableOTC,
-    OperatorWhitelistDisableOTC
+    OperatorWhitelistDisableOTC,
+    Disabled
 }
 
 enum StakerConstraints {
@@ -31,7 +33,8 @@ enum TransferSecurityLevels {
     Three,
     Four,
     Five,
-    Six
+    Six,
+    Seven
 }
 
 struct TransferSecurityPolicy {

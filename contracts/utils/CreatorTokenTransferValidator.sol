@@ -67,6 +67,9 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
  *          - Level 6 (Six): Only whitelisted operators can initiate transfers, with over-the-counter (OTC) trading disabled. Transfers are allowed only to Externally Owned Accounts (EOAs).
  *            - Caller Constraints: OperatorWhitelistDisableOTC
  *            - Receiver Constraints: EOA
+ *          - Level 7 (Seven): Transfers are disabled.
+ *            - Caller Constraints: Disabled
+ *            - Receiver Constraints: Disabled
  */
 contract CreatorTokenTransferValidator is EOARegistry, ICreatorTokenTransferValidator {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -78,6 +81,7 @@ contract CreatorTokenTransferValidator is EOARegistry, ICreatorTokenTransferVali
     error CreatorTokenTransferValidator__CallerDoesNotOwnAllowlist();
     error CreatorTokenTransferValidator__CallerMustBeWhitelistedOperator();
     error CreatorTokenTransferValidator__CallerMustHaveElevatedPermissionsForSpecifiedNFT();
+    error CreatorTokenTransferValidator__Disabled();
     error CreatorTokenTransferValidator__ReceiverMustNotHaveDeployedCode();
     error CreatorTokenTransferValidator__ReceiverProofOfEOASignatureUnverified();
     
@@ -130,6 +134,11 @@ contract CreatorTokenTransferValidator is EOARegistry, ICreatorTokenTransferVali
             receiverConstraints: ReceiverConstraints.EOA
         });
 
+        transferSecurityPolicies[TransferSecurityLevels.Seven] = TransferSecurityPolicy({
+            callerConstraints: CallerConstraints.Disabled,
+            receiverConstraints: ReceiverConstraints.Disabled
+        });
+
         uint120 id = ++lastOperatorWhitelistId;
 
         operatorWhitelistOwners[id] = defaultOwner;
@@ -161,7 +170,14 @@ contract CreatorTokenTransferValidator is EOARegistry, ICreatorTokenTransferVali
         CollectionSecurityPolicy memory collectionSecurityPolicy = collectionSecurityPolicies[collection];
         TransferSecurityPolicy memory transferSecurityPolicy = 
             transferSecurityPolicies[collectionSecurityPolicy.transferSecurityLevel];
-        
+
+        if (
+            transferSecurityPolicy.callerConstraints == CallerConstraints.Disabled ||
+            transferSecurityPolicy.receiverConstraints == ReceiverConstraints.Disabled
+        ) {
+            revert CreatorTokenTransferValidator__Disabled();
+        }
+
         if (transferSecurityPolicy.receiverConstraints == ReceiverConstraints.NoCode) {
             if (to.code.length > 0) {
                 if (!isContractReceiverPermitted(collectionSecurityPolicy.permittedContractReceiversId, to)) {

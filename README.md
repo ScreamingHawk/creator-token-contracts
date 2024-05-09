@@ -238,7 +238,7 @@ Interact with the deployed contract using the provided functions to create, mana
 
 For more information, please refer to the contract code comments and the provided function descriptions.
 
-The `CreatorTokenTransferValidator` contract defines 7 transfer security levels, each represented by a unique `TransferSecurityPolicy`. Each policy consists of a combination of caller and receiver constraints to define varying levels of security for token transfers.
+The `CreatorTokenTransferValidator` contract defines 8 transfer security levels, each represented by a unique `TransferSecurityPolicy`. Each policy consists of a combination of caller and receiver constraints to define varying levels of security for token transfers.
 
 #### **Transfer Security Levels Description**
 
@@ -283,6 +283,12 @@ The `CreatorTokenTransferValidator` contract defines 7 transfer security levels,
    - Caller Constraints: OperatorWhitelistDisableOTC
    - Receiver Constraints: EOA
    - The caller must be whitelisted as an operator, and OTC transfers initiated by the token owner are not allowed. The receiver must be an EOA, which means they cannot be a smart contract and must have performed a one-time signature verification in the `CreatorTokenTransferValidator`.  Specific contract receivers can optionally be designated in a permitted contract receivers allowlist.
+
+7. **TransferSecurityLevels.Seven:**
+
+   - Caller Constraints: Disabled
+   - Receiver Constraints: Disabled
+   - This security level blocks all transfers, effectively making the token soulbound.
 
 These predefined transfer security levels can be applied to collections to implement varying levels of transfer security based on the collection's requirements.
 

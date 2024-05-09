@@ -108,6 +108,14 @@ contract CreatorTokenTransferValidatorERC1155Test is Test {
         assertTrue(receiverConstraints == ReceiverConstraints.EOA);
     }
 
+    function testTransferSecurityLevelSeven() public {
+        (CallerConstraints callerConstraints, ReceiverConstraints receiverConstraints) =
+            validator.transferSecurityPolicies(TransferSecurityLevels.Seven);
+        assertEq(uint8(TransferSecurityLevels.Seven), 7);
+        assertTrue(callerConstraints == CallerConstraints.Disabled);
+        assertTrue(receiverConstraints == ReceiverConstraints.Disabled);
+    }
+
     function testCreateOperatorWhitelist(address listOwner, string memory name) public {
         vm.assume(listOwner != address(0));
         vm.assume(bytes(name).length < 200);
@@ -375,7 +383,7 @@ contract CreatorTokenTransferValidatorERC1155Test is Test {
 
     function testGetSecurityPolicyReturnsExpectedSecurityPolicy(address creator, uint8 levelUint8) public {
         vm.assume(creator != address(0));
-        vm.assume(levelUint8 >= 0 && levelUint8 <= 6);
+        vm.assume(levelUint8 >= 0 && levelUint8 <= 7);
 
         TransferSecurityLevels level = TransferSecurityLevels(levelUint8);
 
@@ -398,7 +406,7 @@ contract CreatorTokenTransferValidatorERC1155Test is Test {
 
     function testSetCustomSecurityPolicy(address creator, uint8 levelUint8) public {
         vm.assume(creator != address(0));
-        vm.assume(levelUint8 >= 0 && levelUint8 <= 6);
+        vm.assume(levelUint8 >= 0 && levelUint8 <= 7);
 
         TransferSecurityLevels level = TransferSecurityLevels(levelUint8);
 
@@ -422,7 +430,7 @@ contract CreatorTokenTransferValidatorERC1155Test is Test {
 
     function testSetTransferSecurityLevelOfCollection(address creator, uint8 levelUint8) public {
         vm.assume(creator != address(0));
-        vm.assume(levelUint8 >= 0 && levelUint8 <= 6);
+        vm.assume(levelUint8 >= 0 && levelUint8 <= 7);
 
         TransferSecurityLevels level = TransferSecurityLevels(levelUint8);
 
@@ -879,6 +887,16 @@ contract CreatorTokenTransferValidatorERC1155Test is Test {
         validator.setTransferSecurityLevelOfCollection(address(token), TransferSecurityLevels.Zero);
         vm.stopPrank();
         assertTrue(token.isTransferAllowed(caller, from, to));
+    }
+
+    function testPolicyLevelSevenBlocksAllTransfers(address creator, address caller, address from, address to) public {
+        vm.assume(creator != address(0));
+        ITestCreatorToken1155 token = _deployNewToken(creator);
+        vm.startPrank(creator);
+        token.setTransferValidator(address(validator));
+        validator.setTransferSecurityLevelOfCollection(address(token), TransferSecurityLevels.Seven);
+        vm.stopPrank();
+        assertFalse(token.isTransferAllowed(caller, from, to));
     }
 
     function testWhitelistPoliciesWithOTCEnabledBlockTransfersWhenCallerNotWhitelistedOrOwner(

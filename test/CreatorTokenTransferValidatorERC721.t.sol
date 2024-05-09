@@ -108,6 +108,14 @@ contract CreatorTokenTransferValidatorERC721Test is Test {
         assertTrue(receiverConstraints == ReceiverConstraints.EOA);
     }
 
+    function testTransferSecurityLevelSeven() public {
+        (CallerConstraints callerConstraints, ReceiverConstraints receiverConstraints) =
+            validator.transferSecurityPolicies(TransferSecurityLevels.Seven);
+        assertEq(uint8(TransferSecurityLevels.Seven), 7);
+        assertTrue(callerConstraints == CallerConstraints.Disabled);
+        assertTrue(receiverConstraints == ReceiverConstraints.Disabled);
+    }
+
     function testCreateOperatorWhitelist(address listOwner, string memory name) public {
         vm.assume(listOwner != address(0));
         vm.assume(bytes(name).length < 200);
@@ -380,7 +388,7 @@ contract CreatorTokenTransferValidatorERC721Test is Test {
 
     function testGetSecurityPolicyReturnsExpectedSecurityPolicy(address creator, uint8 levelUint8) public {
         vm.assume(creator != address(0));
-        vm.assume(levelUint8 >= 0 && levelUint8 <= 6);
+        vm.assume(levelUint8 >= 0 && levelUint8 <= 7);
 
         TransferSecurityLevels level = TransferSecurityLevels(levelUint8);
 
@@ -404,7 +412,7 @@ contract CreatorTokenTransferValidatorERC721Test is Test {
 
     function testSetCustomSecurityPolicy(address creator, uint8 levelUint8) public {
         vm.assume(creator != address(0));
-        vm.assume(levelUint8 >= 0 && levelUint8 <= 6);
+        vm.assume(levelUint8 >= 0 && levelUint8 <= 7);
 
         TransferSecurityLevels level = TransferSecurityLevels(levelUint8);
 
@@ -429,7 +437,7 @@ contract CreatorTokenTransferValidatorERC721Test is Test {
 
     function testSetTransferSecurityLevelOfCollection(address creator, uint8 levelUint8) public {
         vm.assume(creator != address(0));
-        vm.assume(levelUint8 >= 0 && levelUint8 <= 6);
+        vm.assume(levelUint8 >= 0 && levelUint8 <= 7);
 
         TransferSecurityLevels level = TransferSecurityLevels(levelUint8);
 
@@ -902,6 +910,17 @@ contract CreatorTokenTransferValidatorERC721Test is Test {
         assertTrue(token.isTransferAllowed(caller, from, to));
     }
 
+    function testPolicyLevelSevenBlocksAllTransfers(address creator, address caller, address from, address to) public {
+        vm.assume(creator != address(0));
+        _sanitizeAddress(creator);
+        ITestCreatorToken token = _deployNewToken(creator);
+        vm.startPrank(creator);
+        token.setTransferValidator(address(validator));
+        validator.setTransferSecurityLevelOfCollection(address(token), TransferSecurityLevels.Seven);
+        vm.stopPrank();
+        assertFalse(token.isTransferAllowed(caller, from, to));
+    }
+
     function testWhitelistPoliciesWithOTCEnabledBlockTransfersWhenCallerNotWhitelistedOrOwner(
         address creator,
         address caller,
@@ -1032,6 +1051,41 @@ contract CreatorTokenTransferValidatorERC721Test is Test {
             TransferSecurityLevels.Five, creator, caller, from, to
         );
         _testPolicyAllowsAllTransfersWhenOperatorWhitelistIsEmpty(TransferSecurityLevels.Six, creator, caller, from, to);
+    }
+
+    function testBlocksTransfer(
+        address creator,
+        address caller,
+        address from,
+        address to
+    ) public {
+        vm.assume(creator != address(0));
+
+        _sanitizeAddress(creator);
+        ITestCreatorToken token = _deployNewToken(creator);
+
+        vm.assume(caller != address(0));
+        vm.assume(from != address(0));
+        vm.assume(to != address(0));
+
+        vm.startPrank(creator);
+        token.setTransferValidator(address(validator));
+        validator.setTransferSecurityLevelOfCollection(address(token), TransferSecurityLevels.Seven);
+        validator.setOperatorWhitelistOfCollection(address(token), 1);
+        vm.stopPrank();
+
+        assertFalse(token.isTransferAllowed(caller, from, to));
+
+        _mintToken(address(token), from, 1);
+
+        vm.prank(from);
+        token.setApprovalForAll(caller, true);
+
+        vm.prank(caller);
+        vm.expectRevert(
+            CreatorTokenTransferValidator.CreatorTokenTransferValidator__Disabled.selector
+        );
+        token.transferFrom(from, to, 1);
     }
 
     function _testPolicyAllowsAllTransfersWhenOperatorWhitelistIsEmpty(
