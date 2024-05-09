@@ -244,7 +244,7 @@ contract AdventureERC721CWTest is CreatorTokenTransferValidatorERC721Test {
     }
 
     function testCanSetStakerConstraints(uint8 constraintsUint8) public {
-        vm.assume(constraintsUint8 <= 2);
+        vm.assume(constraintsUint8 <= 3);
         StakerConstraints constraints = StakerConstraints(constraintsUint8);
 
         vm.expectEmit(false, false, false, true);
@@ -258,7 +258,7 @@ contract AdventureERC721CWTest is CreatorTokenTransferValidatorERC721Test {
         uint8 constraintsUint8
     ) public {
         vm.assume(unauthorizedUser != address(0));
-        vm.assume(constraintsUint8 <= 2);
+        vm.assume(constraintsUint8 <= 3);
         StakerConstraints constraints = StakerConstraints(constraintsUint8);
 
         vm.prank(unauthorizedUser);
@@ -370,6 +370,24 @@ contract AdventureERC721CWTest is CreatorTokenTransferValidatorERC721Test {
 
         vm.prank(to);
         vm.expectRevert(ERC721WrapperBase.ERC721WrapperBase__CallerSignatureNotVerifiedInEOARegistry.selector);
+        tokenMock.stake(tokenId);
+    }
+
+    function testRevertsWhenStakingDisabled(address to, uint256 tokenId)
+        public
+    {
+        _sanitizeAddress(to);
+        vm.assume(to != address(0));
+
+        vm.startPrank(to);
+        wrappedTokenMock.mint(to, tokenId);
+        wrappedTokenMock.setApprovalForAll(address(tokenMock), true);
+        vm.stopPrank();
+
+        tokenMock.setStakerConstraints(StakerConstraints.Disabled);
+
+        vm.prank(to);
+        vm.expectRevert(ERC721WrapperBase.ERC721WrapperBase__StakeDisabled.selector);
         tokenMock.stake(tokenId);
     }
 
@@ -662,7 +680,7 @@ contract AdventureERC721CWInitializableTest is CreatorTokenTransferValidatorERC7
     }
 
     function testCanSetStakerConstraints(uint8 constraintsUint8) public {
-        vm.assume(constraintsUint8 <= 2);
+        vm.assume(constraintsUint8 <= 3);
         StakerConstraints constraints = StakerConstraints(constraintsUint8);
 
         vm.expectEmit(false, false, false, true);
@@ -676,7 +694,7 @@ contract AdventureERC721CWInitializableTest is CreatorTokenTransferValidatorERC7
         uint8 constraintsUint8
     ) public {
         vm.assume(unauthorizedUser != address(0));
-        vm.assume(constraintsUint8 <= 2);
+        vm.assume(constraintsUint8 <= 3);
         StakerConstraints constraints = StakerConstraints(constraintsUint8);
 
         vm.prank(unauthorizedUser);
@@ -788,6 +806,24 @@ contract AdventureERC721CWInitializableTest is CreatorTokenTransferValidatorERC7
 
         vm.prank(to);
         vm.expectRevert(ERC721WrapperBase.ERC721WrapperBase__CallerSignatureNotVerifiedInEOARegistry.selector);
+        tokenMock.stake(tokenId);
+    }
+
+    function testRevertsWhenStakeDisabled(address to, uint256 tokenId)
+        public
+    {
+        _sanitizeAddress(to);
+        vm.assume(to != address(0));
+
+        vm.startPrank(to);
+        wrappedTokenMock.mint(to, tokenId);
+        wrappedTokenMock.setApprovalForAll(address(tokenMock), true);
+        vm.stopPrank();
+
+        tokenMock.setStakerConstraints(StakerConstraints.Disabled);
+
+        vm.prank(to);
+        vm.expectRevert(ERC721WrapperBase.ERC721WrapperBase__StakeDisabled.selector);
         tokenMock.stake(tokenId);
     }
 

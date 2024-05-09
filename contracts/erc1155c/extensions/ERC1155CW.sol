@@ -28,6 +28,7 @@ abstract contract ERC1155WrapperBase is WithdrawETH, ReentrancyGuard, ICreatorTo
     error ERC1155WrapperBase__DefaultImplementationOfUnstakeDoesNotAcceptPayment();
     error ERC1155WrapperBase__InvalidERC1155Collection();
     error ERC1155WrapperBase__SmartContractsNotPermittedToStake();
+    error ERC1155WrapperBase__StakeDisabled();
 
     /// @dev Points to an external ERC1155 contract that will be wrapped via staking.
     IERC1155 private wrappedCollection;
@@ -76,6 +77,8 @@ abstract contract ERC1155WrapperBase is WithdrawETH, ReentrancyGuard, ICreatorTo
             }
         } else if (stakerConstraints_ == StakerConstraints.EOA) {
             _requireCallerIsVerifiedEOA();
+        } else if (stakerConstraints_ == StakerConstraints.Disabled) {
+            revert ERC1155WrapperBase__StakeDisabled();
         }
 
         if (amount == 0) {

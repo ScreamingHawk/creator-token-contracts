@@ -25,6 +25,7 @@ abstract contract ERC721WrapperBase is WithdrawETH, ICreatorTokenWrapperERC721 {
     error ERC721WrapperBase__DefaultImplementationOfUnstakeDoesNotAcceptPayment();
     error ERC721WrapperBase__InvalidERC721Collection();
     error ERC721WrapperBase__SmartContractsNotPermittedToStake();
+    error ERC721WrapperBase__StakeDisabled();
 
     /// @dev Points to an external ERC721 contract that will be wrapped via staking.
     IERC721 private wrappedCollection;
@@ -72,6 +73,8 @@ abstract contract ERC721WrapperBase is WithdrawETH, ICreatorTokenWrapperERC721 {
             }
         } else if (stakerConstraints_ == StakerConstraints.EOA) {
             _requireCallerIsVerifiedEOA();
+        } else if (stakerConstraints_ == StakerConstraints.Disabled) {
+            revert ERC721WrapperBase__StakeDisabled();
         }
 
         IERC721 wrappedCollection_ = IERC721(getWrappedCollectionAddress());

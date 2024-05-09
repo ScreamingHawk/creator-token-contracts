@@ -345,7 +345,7 @@ contract MyCollection is ERC721CW {
 
 6. To set up a collection to use the default security settings, call the `setToDefaultSecurityPolicy` function on your NFT contract using Etherscan or Gnosis Safe UIs.  Alternately, to set up a collection to use custom security settings, call the `setToCustomSecurityPolicy` function on your NFT contract with the custom validator address, security level, operator whitelist ID, and permitted contract receiver allowlist ID.
 
-7. By default, any address can stake.  But to apply staking constraints to prevent contracts from staking to wrap token, the contract owner can use the `setStakerConstraints(StakerConstraints stakerConstraints_)` function with `StakerConstraints.None`, `StakerConstraints.CallerIsTxOrigin`, or `StakerConstraints.EOA`.
+7. By default, any address can stake.  But to apply staking constraints to prevent contracts from staking to wrap token, the contract owner can use the `setStakerConstraints(StakerConstraints stakerConstraints_)` function with `StakerConstraints.None`, `StakerConstraints.CallerIsTxOrigin`, or `StakerConstraints.EOA`, or `StakerConstraints.Disabled`.
 
 ## How To Implement Programmable Royalties Using A Mix-In
 

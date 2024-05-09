@@ -23,7 +23,8 @@ enum CallerConstraints {
 enum StakerConstraints {
     None,
     CallerIsTxOrigin,
-    EOA
+    EOA,
+    Disabled
 }
 
 enum TransferSecurityLevels {
